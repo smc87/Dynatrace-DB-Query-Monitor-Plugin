@@ -238,11 +238,6 @@ public class QueryMonitor implements Monitor {
 	
 	
 	
-	
-	
-	
-// Modulise database call (make it easy to repeat the call) 
-	
 	public Status getDBReturn(String connectionUrl, String SQL, String Username, String Password, boolean secondCall) throws Exception {
 		/*
 		 * Start timing the database call
@@ -383,10 +378,6 @@ public class QueryMonitor implements Monitor {
 			        		 }
         				 }
 	        			
-	        			
-	        		log.info("Column: " + columnValue[i]);	
-	        		log.info("Column2: " + columnValueb[i]);	
-	        	
 	        		
 	        		switch (comparisonOperator) {
 	        		case "x":
