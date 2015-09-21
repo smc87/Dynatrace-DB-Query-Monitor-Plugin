@@ -2,7 +2,7 @@
 <?eclipse version="3.2"?>
 <!-- plugin.xml file written by dynaTrace Client 4.2.0 -->
 <plugin>
-  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.db.tabmon" name="DB Query Monitor">
+  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.db.tabmon" name="KITS CUSTOM - DB Query Monitor">
     <information>
       <category value="" />
       <displayname value="DB Query Monitor" />
@@ -104,6 +104,116 @@
           <rule key="ColumnCapture" value="true" />
         </visibility>
       </property>
+       <property key="CompareOtherDB" label="Compare Against Another Query" type="boolean" description="Enable this to compare values accross different databases" default="" multiline="false">
+        <visibility>
+          <rule key="ColumnCapture" value="true" />
+        </visibility>
+      </property>
+      <property key="comparisonOperator" label="Comparison Operator" type="list" description="ReturnValue1 Will be modified by returnValue2 - Choose The operator" default="-">
+        <list>
+          <item value="-" />
+          <item value="+" />
+          <item value="/" />
+          <item value="x" />
+        </list>
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="SQLType2" label="SQL Type" type="list" description="The type of 2nd SQL server this monitor is connecting to" default="Microsoft SQL Server">
+        <list>
+          <item value="Microsoft SQL Server" />
+          <item value="Oracle" />
+          <item value="MySQL" />
+          <item value="IBM DB2" />
+          <item value="IBM Netezza" />
+          <item value="Postgres" />
+          <item value="Ingres" />
+        </list>
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="SQLPort2" label="SQL Port" type="string" description="SQL Port to use on the 2nd SQL Server" default="" multiline="false">
+         <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="Database2" label="Database2" type="string" description="Name of the 2nd database to connect to on the sql server" default="" multiline="false">
+              <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>      
+      <property key="URL2" label="URL 2" type="string" description="The URL to use to connect to the 2nd databse, instead of dynamically constructing the URL from the database, server, port, etc." default="" multiline="true">
+              <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="SQLState2" label="SQL Statement 2" type="string" description="SQL Statement to execute on the SQL database.  The returned rows of this statement will be used for the monitor." default="" multiline="false">
+              <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="Username2" label="SQL Username 2" type="string" description="Username to use for login to the database" default="" multiline="false">
+              <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="Password2" label="SQL Password 2" type="password" description="Password for the username used to connect to the 2nd sql database" default="">
+              <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property> 
+       <property key="CNameb" label="Column Name" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb1" label="Column Name 2" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb2" label="Column Name 3" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb3" label="Column Name 4" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb4" label="Column Name 5" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb5" label="Column Name 6" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb6" label="Column Name 7" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb7" label="Column Name 8" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb8" label="Column Name 9" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>
+      <property key="CNameb9" label="Column Name 10" type="string" description="The name of the column you wish to capture." default="" multiline="false">
+        <visibility>
+          <rule key="CompareOtherDB" value="true" />
+        </visibility>
+      </property>      
       <property key="Schema" label="Schema" type="boolean" description="Specify a different Schema for use with the connection." default="false">
         <visibility>
           <rule key="SQLType" value="IBM DB2" />

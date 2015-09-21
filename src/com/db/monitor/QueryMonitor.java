@@ -24,6 +24,12 @@ public class QueryMonitor implements Monitor {
 	private static final String CONFIG_USERNAME = "Username";
 	private static final String CONFIG_PASSWORD = "Password";
 	private static final String CONFIG_STATEMENT = "SQLState";
+	private static final String CONFIG_PORT2 = "SQLPort2";
+	private static final String CONFIG_DATABASE2 = "Database2";
+	private static final String CONFIG_URL2 = "URL2";
+	private static final String CONFIG_USERNAME2 = "Username2";
+	private static final String CONFIG_PASSWORD2 = "Password2";
+	private static final String CONFIG_STATEMENT2 = "SQLState2";
 	private static final String CONFIG_AD = "Windows";
 	private static final String CONFIG_TIMEOUT = "Timeout";
 	private static final String CONFIG_MATCHCONTENT = "MatchContent";
@@ -31,14 +37,25 @@ public class QueryMonitor implements Monitor {
 	private static final String CONFIG_MATCHVALUE = "MatchValue";
 	private static final String CONFIG_GETCOLUMN = "ColumnCapture";
 	private static final String CONFIG_TYPE = "SQLType";
+	private static final String CONFIG_TYPE2 = "SQLType2";
 	private static final String CONFIG_CNAME = "CName";
+	private static final String CONFIG_CNAMEb = "CNameb";
+	private static final String CONFIG_COMPARE_OTHER_DB = "CompareOtherDB"; 
+	private static final String CONFIG_COMPARISON_OPERATOR = "comparisonOperator";
+	
+	private boolean compareOtherDB;	
 	private int rowcount = 0;
 	private int dbconnect = 0;
+	private int rowcount2 = 0;
+	private int dbconnect2 = 0;
 	private int contentMatched = 0;
 	private double[] columnValue;
+	private double[] columnValueb;
 	private String[] CName;
+	private String[] CNameb;
 	private String connectionUrl = "";
 	private String sqlclass = "";
+	private String comparisonOperator = "";
 	private long startTime = 0;
 	private long connectStartTime = 0;
 	private long queryStartTime = 0;
@@ -48,16 +65,23 @@ public class QueryMonitor implements Monitor {
 	
 	private String Username;
 	private String Password;
-	private boolean windows;
+	private String SQLType;
 	private String SQLServer;
 	private String Port;
 	private String Database;
 	private String URL;
+	private String Username2;
+	private String Password2;
+	private String SQLType2;
+	private String SQLServer2;
+	private String Port2;
+	private String Database2;
+	private String URL2;
+	private boolean windows;
 	private boolean matchContent;
 	private String matchColumn;
 	private String matchValue;
 	private boolean getc;
-	private String SQLType;
 	private long timeout;
 
 	@Override
@@ -71,20 +95,33 @@ public class QueryMonitor implements Monitor {
 
 		Username = env.getConfigString(CONFIG_USERNAME);
 		Password = env.getConfigPassword(CONFIG_PASSWORD);
+		Username2 = env.getConfigString(CONFIG_USERNAME2);
+		Password2 = env.getConfigPassword(CONFIG_PASSWORD2);
 		windows = env.getConfigBoolean(CONFIG_AD);
 		SQLServer = env.getHost().getAddress();
 		Port = env.getConfigString(CONFIG_PORT);
+		Port2 = env.getConfigString(CONFIG_PORT2);
 		Database = env.getConfigString(CONFIG_DATABASE);
+		Database2 = env.getConfigString(CONFIG_DATABASE2);
 		URL = env.getConfigString(CONFIG_URL);
+		URL2 = env.getConfigString(CONFIG_URL2);
+		SQLType = env.getConfigString(CONFIG_TYPE);
+		comparisonOperator = env.getConfigString(CONFIG_COMPARISON_OPERATOR);
+		SQLType2 = env.getConfigString(CONFIG_TYPE2);
 		matchContent = env.getConfigBoolean(CONFIG_MATCHCONTENT);
 		matchColumn = env.getConfigString(CONFIG_MATCHCOlUMN);
 		matchValue = env.getConfigString(CONFIG_MATCHVALUE);
 		getc = env.getConfigBoolean(CONFIG_GETCOLUMN);
-		SQLType = env.getConfigString(CONFIG_TYPE);
 		timeout = env.getConfigLong(CONFIG_TIMEOUT);
+		compareOtherDB = env.getConfigBoolean(CONFIG_COMPARE_OTHER_DB);
 		CName = new String[MAXCOLS];
+		CNameb = new String[MAXCOLS];
 		columnValue = new double[MAXCOLS];
+		columnValueb = new double[MAXCOLS];
 		
+		log.fine("config values read ok");
+		
+		//FIXME - ENDTIME for two connections???? Rowcounts - assign to a var after each run?
 		/*
 		 * Extract out the column names and save them out as the names of the dynamic measures. Retain backward
 		 * compatibility with the v2 version of this plug-in
@@ -104,7 +141,7 @@ public class QueryMonitor implements Monitor {
 		}
 		
 		/*
-		 * Set the connectionUrl and sqltype variables, to be used to connect to the database
+		 * Set the connectionUrl and sqltype variables, to be used to connect to the database - note to self setConnectionConfig method does this further down
 		 */
 		Status status = null;
 		status = setConnectionConfig(env, SQLType, SQLServer, Port, Database, URL);
@@ -112,17 +149,112 @@ public class QueryMonitor implements Monitor {
 			return status;
 		
 		String SQL = env.getConfigString(CONFIG_STATEMENT);
-		Connection con = null;
-		Statement stmt = null;
-		ResultSet rs = null;
+
 		
 		dbconnect = 0;
+		//This calls the 1st modular DB Request
+		Status DBReturn = getDBReturn(connectionUrl, SQL, Username, Password, false);
 		
+		/*
+		 * Flag the call as successful; otherwise keep failure code and indicate that no records were retrieved.
+		 */
+		if (DBReturn == null) {
+			DBReturn = new Status(Status.StatusCode.Success);
+		}
+		else {
+			rowcount = 0;
+		}
+		
+		if (log.isLoggable(Level.FINE))
+			log.fine("Rowcount: " + rowcount);
+
+		DBReturn.setMessage("Rowcount: " + rowcount);
+		log.info("DB Return tostring: " + DBReturn.toString());
+		//FIXME - check if we need a second call.
+		log.info(DBReturn.toString());
+		if (compareOtherDB == false) {
+			
+		return DBReturn;
+		} else {
+		//FIXME - second DB Call
+		
+			/*
+			 * Extract out the column names and save them out as the names of the dynamic measures. Retain backward
+			 * compatibility with the v2 version of this plug-in
+			 */
+			String columnNameb;
+			if (getc) {
+				columnNameb = env.getConfigString(CONFIG_CNAMEb);
+				if (columnNameb != null && columnNameb.trim().length() > 0) {
+					CNameb[0] = columnNameb;
+					log.info(columnNameb);
+				}
+				for (int i=1;i<MAXCOLS;i++) {
+					columnNameb = env.getConfigString(CONFIG_CNAMEb+Integer.toString(i));
+					if (columnNameb != null && columnNameb.trim().length() > 0) {
+						CNameb[i] = columnNameb;
+						log.info(columnNameb);
+					}
+				}
+			}
+			
+			/*
+			 * Set the connectionUrl and sqltype variables, to be used to connect to the database - note to self setConnectionConfig method does this further down
+			 */
+			Status status2 = null;
+			status2 = setConnectionConfig(env, SQLType2, SQLServer2, Port2, Database2, URL2);
+			if (status2 != null)
+				return status2;
+			
+			String SQL2 = env.getConfigString(CONFIG_STATEMENT2);
+
+			
+			dbconnect = 0;
+			//This calls the 1st modular DB Request
+			Status DBReturn2 = getDBReturn(connectionUrl, SQL2, Username2, Password2, true);
+			
+			/*
+			 * Flag the call as successful; otherwise keep failure code and indicate that no records were retrieved.
+			 */
+			if (DBReturn2 == null) {
+				DBReturn2 = new Status(Status.StatusCode.Success);
+			}
+			else {
+				rowcount2 = 0;
+			}
+			
+			if (log.isLoggable(Level.FINE))
+				log.fine("Rowcount: " + rowcount);
+
+			DBReturn2.setMessage("Rowcount: " + rowcount);
+			log.info("DBReturn2 tostring: " + DBReturn2.toString());
+			return DBReturn2; //FIXME - Compare values
+		
+		
+		}	
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+// Modulise database call (make it easy to repeat the call) 
+	
+	public Status getDBReturn(String connectionUrl, String SQL, String Username, String Password, boolean secondCall) throws Exception {
 		/*
 		 * Start timing the database call
 		 */
+		Status getDBReturn = null;
 		startTime = System.nanoTime();
 		connectStartTime = startTime;
+		
+		
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
 		
 		//connect to the database and check the number of rows returned
 		log.info("Connecting to " + SQLType + " database, host " + SQLServer + ":" + Port + " database name " + Database);
@@ -188,12 +320,17 @@ public class QueryMonitor implements Monitor {
 	         * and logged, to become available for later analysis.
 	         */
 	        while (rs.next()) {
+	        	
 	        	 if((rowcount == 0) && matchContent == true) {
-	        		 status = compareColumnValue(matchColumn, matchValue, rs);
+	        		 getDBReturn = compareColumnValue(matchColumn, matchValue, rs);
 	        	 }
 	        	 
 	        	 if((rowcount == 0) && getc == true) {
 	        		 for (int i = 0; i<MAXCOLS; i++) {
+	        			 
+	        			 
+	        		if (!secondCall) {	        			 
+	        			 
         				 if (CName[i] != null  && CName[i].trim().length() > 0) {
         					 String columnValueStr;
         					 
@@ -208,16 +345,71 @@ public class QueryMonitor implements Monitor {
 				        		 }
 				        		 catch(Exception e) {
 				        			 log.log(Level.SEVERE, "Error converting column " + CName[i] + " to a numeric value. ", e);
-				        			 if (status == null)
-				        				 status = new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
+				        			 if (getDBReturn == null)
+				        				 getDBReturn = new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
 				        		 }
 			        		 }
 			        		 catch(Exception e) {
 			        			 log.log(Level.SEVERE, "Error retrieving column " + CName[i] + " from the resultset. ", e);
-			        			 if (status == null)
-			        				 status = new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
+			        			 if (getDBReturn == null)
+			        				 getDBReturn = new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
 			        		 }
         				 }
+	        		 
+	        		} else {
+	        			
+	      				 if (CNameb[i] != null  && CNameb[i].trim().length() > 0) {
+        					 String columnValueStr;
+        					 
+			        		 try {
+			        			 if (log.isLoggable(Level.FINER))
+			        				 log.finer("Retrieving column value for column " + CNameb[i]);
+			        			 
+			        			 columnValueStr = rs.getString(CNameb[i]);
+			        			 
+			        			 try {
+				        			 columnValueb[i] = Double.parseDouble(columnValueStr);
+				        		 }
+				        		 catch(Exception e) {
+				        			 log.log(Level.SEVERE, "Error converting column " + CNameb[i] + " to a numeric value. ", e);
+				        			 if (getDBReturn == null)
+				        				 getDBReturn = new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
+				        		 }
+			        		 }
+			        		 catch(Exception e) {
+			        			 log.log(Level.SEVERE, "Error retrieving column " + CNameb[i] + " from the resultset. ", e);
+			        			 if (getDBReturn == null)
+			        				 getDBReturn = new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
+			        		 }
+        				 }
+	        			
+	        			
+	        		log.info("Column: " + columnValue[i]);	
+	        		log.info("Column2: " + columnValueb[i]);	
+	        	
+	        		
+	        		switch (comparisonOperator) {
+	        		case "x":
+	        			columnValue[i] = columnValue[i] * columnValueb[i];	
+	        			break;
+	        		case "+":
+	        			columnValue[i] = columnValue[i] + columnValueb[i];	
+	        			break;
+	        		case "-":
+	        			columnValue[i] = columnValue[i] - columnValueb[i];	
+	        			break;
+	        		case "/":
+	        			columnValue[i] = columnValue[i] / columnValueb[i];	
+	        			break;
+	        		      			
+	        		}
+	        		}
+	        		 
+	        		 
+	        		 
+	        		 
+	        		 
+	        		 
 	        		 }
 	        	 }
 	        	 rowcount++;
@@ -242,7 +434,7 @@ public class QueryMonitor implements Monitor {
 	    	  dbconnect = 0;
 	    	  rowcount=0;
 	    	  log.severe(sw.toString());
-		      status = new Status(Status.StatusCode.PartialSuccess);
+	    	  getDBReturn = new Status(Status.StatusCode.PartialSuccess);
 		  }
 	      catch (Exception e) {
 	    	  /*
@@ -253,7 +445,7 @@ public class QueryMonitor implements Monitor {
 	    	  e.printStackTrace(pw);
 	    	  dbconnect = 0;
 	    	  log.severe(sw.toString());
-		      status = new Status(Status.StatusCode.ErrorInternalException);
+	    	  getDBReturn = new Status(Status.StatusCode.ErrorInternalException);
 		  }
 		  finally {
 		    	  
@@ -267,23 +459,13 @@ public class QueryMonitor implements Monitor {
 		 */
 		endTime = System.nanoTime();
 		queryEndTime = endTime;
-		
-		/*
-		 * Flag the call as successful; otherwise keep failure code and indicate that no records were retrieved.
-		 */
-		if (status == null) {
-			status = new Status(Status.StatusCode.Success);
-		}
-		else {
-			rowcount = 0;
-		}
-		
-		if (log.isLoggable(Level.FINE))
-			log.fine("Rowcount: " + rowcount);
-
-		status.setMessage("Rowcount: " + rowcount);		
-		return status;
+		return getDBReturn;
 	}
+	
+	
+
+	
+	
 	
 	/**
 	 * setConnectionConfig
@@ -399,6 +581,14 @@ public class QueryMonitor implements Monitor {
 		 
 		 return status;
 	}
+	
+
+	
+	
+	
+	
+	
+	
 
 	protected int numRows() {
 		return rowcount;
